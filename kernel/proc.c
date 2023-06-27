@@ -290,7 +290,7 @@ fork(void)
   np->cwd = idup(p->cwd);
 
   safestrcpy(np->name, p->name, sizeof(p->name));
-
+  np->trace_mask = p->trace_mask; // copy the trace mask from the parent to the child process
   pid = np->pid;
 
   np->state = RUNNABLE;
@@ -692,4 +692,20 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+// return used process number
+uint64 
+get_pronum(void) 
+{
+    uint64 cnt = 0;
+    struct proc *p;
+    // 遍历进程表，计算活跃进程数
+    for (p = proc; p < &proc[NPROC]; p++) {
+        acquire(&p->lock);
+        if (p->state != UNUSED)
+            cnt++;
+	release(&p->lock);
+    }
+    return cnt;
 }
